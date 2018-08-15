@@ -191,6 +191,10 @@ int main()
 								{
 									waitTimeSchedule-=introduceRandomDelay;
 								}
+								else
+								{
+									introduceRandomDelay=0;
+								}
 								schDepTime+=(travelTime[tripStr(currPtOld,currPt)]+introduceRandomDelay);
 							}
 							else
@@ -204,6 +208,10 @@ int main()
 								if(introduceRandomDelay<=waitTimeSchedule)
 								{
 									waitTimeSchedule-=introduceRandomDelay;
+								}
+								else
+								{
+									introduceRandomDelay=0;
 								}
 								schDepTime+=(travelTime[tripStr(currPtOld,currPt)]+introduceRandomDelay);
 							}
