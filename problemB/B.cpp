@@ -92,7 +92,8 @@ int main()
 			int redundantLines; 
 			int out_d = 0;
 			cin>>currTestCaseName>>redundantLines;
-
+			auto startAlarmClock = chrono::steady_clock::now();
+			
 			string garbage;
 			getline(cin,garbage);
 			string seqLine;
@@ -133,9 +134,12 @@ int main()
 				scheduleVec.push_back(currSch);
 			}
 
-
-			for(int schedulingRun=0;schedulingRun<10;schedulingRun++)
+			long int maxOneIteration = 0;
+			
+			long int timeAlarm=0;
+			for(int schedulingRun=0;schedulingRun<1||timeAlarm<(r*1000-3*maxOneIteration) ;schedulingRun++)
 			{
+				auto startCurrSchedule= chrono::steady_clock::now();
 				//DEBUG2(schedulingRun);
 				//making a new scheduling and doing things again
 					linesOut.clear();
@@ -323,7 +327,8 @@ int main()
 								continue;
 							}
 
-							int topHowMany=min(5,(v1s));
+							int topHowMany=(rand()%10+5);
+							topHowMany=min(topHowMany,(v1s));
 							
 							//DEBUG2("hey1");
 							vector< vector<int> > smallIndexes(v1s,vector<int>(topHowMany,v2s));
@@ -347,7 +352,7 @@ int main()
 
 
 
-							for(int testrun=0;testrun<100;testrun++)
+							for(int testrun=0;testrun<200;testrun++)
 							{
 								//DEBUG2("final");
 									vector<int> matching1(v1s,v2s);
@@ -553,11 +558,19 @@ int main()
 
 					if(finalTotalScore<wholeSchedulingScore)
 					{
+						DEBUG2(overallCount);
+						DEBUG2(schedulingRun);
+						DEBUG2(wholeSchedulingScore);
 						finalLinesOut=linesOut;
 						final_out_m=out_m;
 						final_out_d=out_d;
 						wholeSchedulingScore=finalTotalScore;
 					}
+				auto endCurrSchedule= chrono::steady_clock::now();
+				auto currIterationTime = chrono::duration_cast<chrono::milliseconds>(endCurrSchedule - startCurrSchedule).count();
+				maxOneIteration=max(maxOneIteration,currIterationTime);
+				auto currAlarmClock = chrono::steady_clock::now();
+				timeAlarm = chrono::duration_cast<chrono::milliseconds>(currAlarmClock - startAlarmClock).count();
 
 			}
 
