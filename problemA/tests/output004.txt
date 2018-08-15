@@ -1,0 +1,15 @@
+13
+A B 1 16 A
+A B 2 14 B
+A B 3 13 A
+A B 4 18 B
+A B 5 24 B
+A B 6 15 A
+A B 7 17 A
+A B 8 22 B
+A B 9 20 B
+A B 10 19 B
+A B 11 23 A
+A B 12 21 A
+B A 25 -1 -1
+39
