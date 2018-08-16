@@ -137,6 +137,7 @@ int main()
 			long int maxOneIteration = 0;
 			
 			long int timeAlarm=0;
+			srand (time(NULL));
 			for(int schedulingRun=0;schedulingRun<1||timeAlarm<(r*1000-3*maxOneIteration) ;schedulingRun++)
 			{
 				auto startCurrSchedule= chrono::steady_clock::now();
@@ -246,7 +247,7 @@ int main()
 							vector<int> finalMatching1;
 							vector<int> finalMatching2;
 							int finalScore=INT_MAX;
-							srand (time(NULL));
+							
 							int endNode=startNode+1;
 
 						
