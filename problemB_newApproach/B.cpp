@@ -102,6 +102,7 @@ int main()
 		cin>>numlinesRedundant;
 		unordered_map<string,int> indexPt;
 		unordered_map< string, int> travelTime;
+		unordered_map< string, bool > aheadMovingMap;
 		string garbage;
 		getline(cin,garbage);
 		string seqLine;
@@ -137,10 +138,12 @@ int main()
 			if(destination==pitstopSequenceVector[0])
 			{
 				currSch.aheadMoving=false;
+				aheadMovingMap[to_string(currSch.tid)]=false;
 			}
 			else
 			{
 				currSch.aheadMoving=true;
+				aheadMovingMap[to_string(currSch.tid)]=true;
 			}
 			//DEBUG2(currSch.aheadMoving);
 			int startIndexPt=indexPt[currSch.currPt];
@@ -162,6 +165,8 @@ int main()
 				}
 			}
 			waitTimeSchedule=(arriveBy- currSch.startingTime)-timeTravelSchedule;
+			// DEBUG2(currSch.tid);
+			// DEBUG2(waitTimeSchedule);
 			currSch.waitTimeAlloted=waitTimeSchedule;
 			currSch.waitTimeLeft=waitTimeSchedule;
 			scheduleVec.push_back(currSch);
@@ -210,10 +215,14 @@ int main()
 					{
 						if(simulationTime==0 && indexToAddTruck==0)
 						{
+							//DEBUG2("Added truck aboutToReachFromLeft");
+							//DEBUG2(currTruckToAddInSystem.tid);
 							aboutToReachFromLeft[0].push_back(currTruckToAddInSystem);
 						}
 						else if(simulationTime==0 && indexToAddTruck==(totalPitstops-1))
 						{
+							//DEBUG2("Added truck aboutToReachFromRight");
+							//DEBUG2(currTruckToAddInSystem.tid);
 							aboutToReachFromRight[(totalPitstops-1)].push_back(currTruckToAddInSystem);
 						}
 					}
@@ -221,27 +230,29 @@ int main()
 					{
 						if(currTruckToAddInSystem.aheadMoving)
 						{
-							//DEBUG2(currTruckToAddInSystem.aheadMoving);
-							if(simulationTime==
-								max(currTruckToAddInSystem.reachedCurrAt- 
+							int idealAdditionTime=currTruckToAddInSystem.reachedCurrAt- 
 									travelTime[tripStr(pitstopSequenceVector[indexToAddTruck-1],
-										pitstopSequenceVector[indexToAddTruck])],0
-									)
-								)
+										pitstopSequenceVector[indexToAddTruck])];
+							//DEBUG2(currTruckToAddInSystem.aheadMoving);
+							if(simulationTime==max(idealAdditionTime,0))
 							{
+								//DEBUG2("Added truck aboutToReachFromLeft");
+								//DEBUG2(currTruckToAddInSystem.tid);
+								//DEBUG2(indexToAddTruck);
 								aboutToReachFromLeft[indexToAddTruck].push_back(currTruckToAddInSystem);
 							}
 						}
 						else
 						{
-							//DEBUG2(currTruckToAddInSystem.aheadMoving);
-							if(simulationTime==
-								max(currTruckToAddInSystem.reachedCurrAt- 
+							int idealAdditionTime=currTruckToAddInSystem.reachedCurrAt- 
 									travelTime[tripStr(pitstopSequenceVector[indexToAddTruck+1],
-										pitstopSequenceVector[indexToAddTruck])],0
-									)
-								)
+										pitstopSequenceVector[indexToAddTruck])];
+							//DEBUG2(currTruckToAddInSystem.aheadMoving);
+							if(simulationTime==max(idealAdditionTime,0))
 							{
+								//DEBUG2("Added truck aboutToReachFromRight");
+								//DEBUG2(indexToAddTruck);
+								//DEBUG2(currTruckToAddInSystem.tid);
 								aboutToReachFromRight[indexToAddTruck].push_back(currTruckToAddInSystem);
 							}
 						}
@@ -249,13 +260,17 @@ int main()
 				}
 				for(int pitStopIndex=0;pitStopIndex<totalPitstops;pitStopIndex++)
 				{
+					// if(pitStopIndex==1 && simulationTime==3)
+					// {
+					// 	//DEBUG2(aboutToReachFromLeft[pitStopIndex].front().tid);
+					// 	//DEBUG2(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt);
+					// }
 					
 					//truck travelling from right has reached
 					while(!aboutToReachFromRight[pitStopIndex].empty() &&
 						aboutToReachFromRight[pitStopIndex].front().reachedCurrAt==simulationTime)
 					{
-						//cerr<<aboutToReachFromRight[pitStopIndex].front().tid<<" truck has reached pitStop "<<
-						//pitStopIndex<<" and is waiting to go left"<<endl;
+						//cerr<<aboutToReachFromRight[pitStopIndex].front().tid<<" truck has reached pitStop "<<pitStopIndex<<" and is waiting to go left"<<endl;
 						waitingToGoLeft[pitStopIndex].push_back(aboutToReachFromRight[pitStopIndex].front());
 						if(aboutToReachFromRight[pitStopIndex].front().driverCreate)
 						{	
@@ -285,6 +300,7 @@ int main()
 						}
 						aboutToReachFromLeft[pitStopIndex].pop_front();
 					}
+					//DEBUG2(waitingToGoRight[pitStopIndex].size());
 					
 					
 
@@ -294,9 +310,9 @@ int main()
 						struct truckNode truckToGoRightCopy=waitingToGoRight[pitStopIndex].front();
 						waitingToGoRight[pitStopIndex].pop_front();
 
-						// cerr<<"there are drivers from right present "<<pitstopSequenceVector[pitStopIndex]<<
-						// "here and there are also trucks waiting to go right, So Match has occured between truck id"<<truckToGoRightCopy.tid<< "which needs to go right"
-						// <<"and "<<driverFromRight[pitStopIndex].front().reachedTripId<<" which came from right";
+						 // cerr<<"there are drivers from right present "<<pitstopSequenceVector[pitStopIndex]<<
+						 // "here and there are also trucks waiting to go right, So Match has occured between truck id"<<truckToGoRightCopy.tid<< "which needs to go right"
+						 // <<"and "<<driverFromRight[pitStopIndex].front().reachedTripId<<" which came from right"<<endl;
 						//update tripsToOutput
 						truckToGoRightCopy.driverCreate=false;
 						string outStr=to_string(truckToGoRightCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
@@ -327,15 +343,18 @@ int main()
 					//let go of trucks which have no waiting time left or drivers are not there
 					vector<int> toRemove;
 					
+					//DEBUG2(waitingToGoRight[pitStopIndex].size());
+					//DEBUG2("traversing trucks wanting to go right");
 					for(int tj=0;tj<waitingToGoRight[pitStopIndex].size();tj++)
 					{
-						if(pitStopIndex==(pitStopIndex-1))
+						if(pitStopIndex>=(totalPitstops-1))
 						{
 							toRemove.push_back(tj);
 							continue;
 						}
 						struct truckNode truckToGoRight=waitingToGoRight[pitStopIndex][tj];
 						struct truckNode truckToGoRightCopy=truckToGoRight;
+						//DEBUG2(truckToGoRightCopy.tid);
 
 						double currentRandomNumber = unif(rng);
 						if(truckToGoRightCopy.waitTimeLeft==0 || 
@@ -346,7 +365,7 @@ int main()
 							//update tripsToOutput
 							string outStr=to_string(truckToGoRightCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
 							+" "+to_string(simulationTime);
-							tripsToOutput.push_back(outStr);
+							
 							//driver is created
 							truckToGoRightCopy.driverCreate=true;
 							//update arrival at next stop
@@ -360,6 +379,7 @@ int main()
 							// <<pitstopSequenceVector[pitStopIndex+1];
 								aboutToReachFromLeft[pitStopIndex+1].push_back(truckToGoRightCopy);
 							}
+							tripsToOutput.push_back(outStr);
 							toRemove.push_back(tj);
 						}
 					}
@@ -406,7 +426,7 @@ int main()
 					vector<int> toRemove1;
 					for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
 					{
-						if(pitStopIndex==(0))
+						if(pitStopIndex<=(0))
 						{
 							toRemove1.push_back(tj);
 							continue;
@@ -426,7 +446,7 @@ int main()
 							//update tripsToOutput
 							string outStr=to_string(truckToGoLeftCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
 							+" "+to_string(simulationTime);
-							tripsToOutput.push_back(outStr);
+							
 							//driver is created
 							truckToGoLeftCopy.driverCreate=true;
 							//update arrival at next stop
@@ -440,6 +460,7 @@ int main()
 							// <<pitstopSequenceVector[pitStopIndex-1];
 								aboutToReachFromRight[pitStopIndex-1].push_back(truckToGoLeftCopy);
 							}
+							tripsToOutput.push_back(outStr);
 							toRemove1.push_back(tj);
 						}
 					}
@@ -479,6 +500,7 @@ int main()
 					matchingToOutput.push_back(outStr);
 					costScore+=costVal(ow - driverFromLeft[pitStopIndex][zez].reachedAt);
 				}
+
 				for(int zez=0;zez<driverFromRight[pitStopIndex].size();zez++)
 				{
 					string outStr=pitstopSequenceVector[pitStopIndex+1]+" "+
@@ -487,6 +509,36 @@ int main()
 					matchingToOutput.push_back(outStr);
 					costScore+=costVal(ow - driverFromRight[pitStopIndex][zez].reachedAt);
 				}
+				for(int maq=0;maq<totalPitstops;maq++)
+				{
+					//DEBUG2(maq);
+					for(int tak=0;tak<aboutToReachFromRight[maq].size();tak++)
+					{
+						struct truckNode unmatchTruck=aboutToReachFromRight[maq][tak];
+						if(unmatchTruck.driverCreate)
+						{
+							string outStr=pitstopSequenceVector[maq+1]+" "+
+							pitstopSequenceVector[maq]+" "+
+							to_string(unmatchTruck.tid)+" -1 -1";
+							matchingToOutput.push_back(outStr);
+						}
+					}
+					for(int tak=0;tak<aboutToReachFromLeft[maq].size();tak++)
+					{
+						struct truckNode unmatchTruck=aboutToReachFromLeft[maq][tak];
+						if(unmatchTruck.driverCreate)
+						{
+							string outStr=pitstopSequenceVector[maq-1]+" "+
+					pitstopSequenceVector[maq]+" "+
+					to_string(unmatchTruck.tid)+" -1 -1";
+					matchingToOutput.push_back(outStr);
+					
+						}
+
+					}
+
+				}
+				
 			}
 
 			if(costScore<costScore_final)
@@ -498,6 +550,61 @@ int main()
 
 		}
 		
+		// vector< vector<string> > matchingBrokenUp;
+		// int numUnmatched=0;
+		// for(int i=0;i<matchingToOutput_final.size();i++)
+		// {
+		// 	vector<string> vhj=(splitString(matchingToOutput_final[i]));
+		// 	if(vhj[4]=="-1")
+		// 	{
+		// 		numUnmatched+=1;
+		// 	}
+		// }
+
+		// if(int(tripsToOutput_final.size())!=  (int(matchingToOutput_final.size())*2-numUnmatched) )
+		// {
+		// 	cerr<<"This is in error "<<testcaseName<<endl;
+		// 	DEBUG2(numUnmatched);
+		// }
+
+		// for(int i=0;i<tripsToOutput_final.size();i++)
+		// {
+		// 	vector<string> currTripBroken= splitString(tripsToOutput_final[i]);
+		// 	bool foundInMatch=false;
+		// 	for(int j=0;j<matchingBrokenUp.size();j++)
+		// 	{
+		// 		if(currTripBroken[0]==matchingBrokenUp[j][2] && currTripBroken[1]==matchingBrokenUp[j][0])
+		// 		{
+		// 			foundInMatch=true;
+		// 			break;
+		// 		}
+		// 		if(currTripBroken[0]==matchingBrokenUp[j][3] && currTripBroken[1]==matchingBrokenUp[j][1])
+		// 		{
+		// 			foundInMatch=true;
+		// 			break;
+		// 		}
+		// 	}
+		// 	if(!foundInMatch)
+		// 	{
+		// 		string otherPitStop;
+		// 		if(aheadMovingMap[currTripBroken[0]])
+		// 		{
+		// 			otherPitStop=pitstopSequenceVector[indexPt[currTripBroken[0]]+1];
+		// 		}
+		// 		else
+		// 		{
+		// 			otherPitStop=pitstopSequenceVector[indexPt[currTripBroken[0]]+1];
+		// 		}
+
+		// 		//add to matchingToOutput_final
+		// 		string addThisMatch=currTripBroken[1]+" "+otherPitStop+" "+currTripBroken[0]+" -1 -1";
+		// 		matchingToOutput_final.push_back(addThisMatch);
+		// 	}
+		// }
+
+
+		set<string> myset( matchingToOutput_final.begin(), matchingToOutput_final.end() );
+		matchingToOutput_final.assign( myset.begin(), myset.end() );
 
 
 		// DEBUG2(costScore);
