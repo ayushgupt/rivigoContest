@@ -168,340 +168,352 @@ int main()
 		}
 		sort(scheduleVec.begin(), scheduleVec.end(),myfunction);
 
+		int costScore_final=INT_MAX;
+		vector<string> tripsToOutput_final;
+		vector<string> matchingToOutput_final;
 
-		//Start iterations here
-		int costScore=0;
-		vector<string> tripsToOutput;
-		vector<string> matchingToOutput;
-		
-		vector< deque<truckNode> > waitingToGoLeft(totalPitstops);
-		vector< deque<truckNode> > aboutToReachFromRight(totalPitstops);
-		
-		vector< deque<truckNode> > waitingToGoRight(totalPitstops);
-		vector< deque<truckNode> > aboutToReachFromLeft(totalPitstops);
-		
-		vector< deque<driverNode> > driverFromLeft(totalPitstops);
-		vector< deque<driverNode> > driverFromRight(totalPitstops);
-
-		//making the truck Nodes starting points and waiting time correct
-		for(int i=0;i<s;i++)
+		for(int scheduleIteration=0;scheduleIteration<1;scheduleIteration++)
 		{
-			scheduleVec[i].currPt=scheduleVec[i].startPt;
-			scheduleVec[i].reachedCurrAt=scheduleVec[i].startingTime;
-			scheduleVec[i].waitTimeLeft=scheduleVec[i].waitTimeAlloted;
-		}
+			//Start iterations here
+			int costScore=0;
+			vector<string> tripsToOutput;
+			vector<string> matchingToOutput;
+			
+			vector< deque<truckNode> > waitingToGoLeft(totalPitstops);
+			vector< deque<truckNode> > aboutToReachFromRight(totalPitstops);
+			
+			vector< deque<truckNode> > waitingToGoRight(totalPitstops);
+			vector< deque<truckNode> > aboutToReachFromLeft(totalPitstops);
+			
+			vector< deque<driverNode> > driverFromLeft(totalPitstops);
+			vector< deque<driverNode> > driverFromRight(totalPitstops);
 
-
-		for(int simulationTime=0;simulationTime<=ow;simulationTime++)
-		{
-			//DEBUG2("########################");
-			//DEBUG2(simulationTime);
-			//Add initial truck trips about to start near simulation time
+			//making the truck Nodes starting points and waiting time correct
 			for(int i=0;i<s;i++)
 			{
-				struct truckNode currTruckToAddInSystem=scheduleVec[i];
-				int indexToAddTruck=indexPt[currTruckToAddInSystem.currPt];
-				if(indexToAddTruck==0 || indexToAddTruck==(totalPitstops-1))
+				scheduleVec[i].currPt=scheduleVec[i].startPt;
+				scheduleVec[i].reachedCurrAt=scheduleVec[i].startingTime;
+				scheduleVec[i].waitTimeLeft=scheduleVec[i].waitTimeAlloted;
+			}
+
+			//doing a simulation
+			for(int simulationTime=0;simulationTime<=ow;simulationTime++)
+			{
+				//DEBUG2("########################");
+				//DEBUG2(simulationTime);
+				//Add initial truck trips about to start near simulation time
+				for(int i=0;i<s;i++)
 				{
-					if(simulationTime==0 && indexToAddTruck==0)
+					struct truckNode currTruckToAddInSystem=scheduleVec[i];
+					int indexToAddTruck=indexPt[currTruckToAddInSystem.currPt];
+					if(indexToAddTruck==0 || indexToAddTruck==(totalPitstops-1))
 					{
-						aboutToReachFromLeft[0].push_back(currTruckToAddInSystem);
-					}
-					else if(simulationTime==0 && indexToAddTruck==(totalPitstops-1))
-					{
-						aboutToReachFromRight[(totalPitstops-1)].push_back(currTruckToAddInSystem);
-					}
-				}
-				else
-				{
-					if(currTruckToAddInSystem.aheadMoving)
-					{
-						//DEBUG2(currTruckToAddInSystem.aheadMoving);
-						if(simulationTime==
-							max(currTruckToAddInSystem.reachedCurrAt- 
-								travelTime[tripStr(pitstopSequenceVector[indexToAddTruck-1],
-									pitstopSequenceVector[indexToAddTruck])],0
-								)
-							)
+						if(simulationTime==0 && indexToAddTruck==0)
 						{
-							aboutToReachFromLeft[indexToAddTruck].push_back(currTruckToAddInSystem);
+							aboutToReachFromLeft[0].push_back(currTruckToAddInSystem);
+						}
+						else if(simulationTime==0 && indexToAddTruck==(totalPitstops-1))
+						{
+							aboutToReachFromRight[(totalPitstops-1)].push_back(currTruckToAddInSystem);
 						}
 					}
 					else
 					{
-						//DEBUG2(currTruckToAddInSystem.aheadMoving);
-						if(simulationTime==
-							max(currTruckToAddInSystem.reachedCurrAt- 
-								travelTime[tripStr(pitstopSequenceVector[indexToAddTruck+1],
-									pitstopSequenceVector[indexToAddTruck])],0
-								)
-							)
+						if(currTruckToAddInSystem.aheadMoving)
 						{
-							aboutToReachFromRight[indexToAddTruck].push_back(currTruckToAddInSystem);
+							//DEBUG2(currTruckToAddInSystem.aheadMoving);
+							if(simulationTime==
+								max(currTruckToAddInSystem.reachedCurrAt- 
+									travelTime[tripStr(pitstopSequenceVector[indexToAddTruck-1],
+										pitstopSequenceVector[indexToAddTruck])],0
+									)
+								)
+							{
+								aboutToReachFromLeft[indexToAddTruck].push_back(currTruckToAddInSystem);
+							}
+						}
+						else
+						{
+							//DEBUG2(currTruckToAddInSystem.aheadMoving);
+							if(simulationTime==
+								max(currTruckToAddInSystem.reachedCurrAt- 
+									travelTime[tripStr(pitstopSequenceVector[indexToAddTruck+1],
+										pitstopSequenceVector[indexToAddTruck])],0
+									)
+								)
+							{
+								aboutToReachFromRight[indexToAddTruck].push_back(currTruckToAddInSystem);
+							}
 						}
 					}
 				}
-			}
-			for(int pitStopIndex=0;pitStopIndex<totalPitstops;pitStopIndex++)
-			{
-				
-				//truck travelling from right has reached
-				while(!aboutToReachFromRight[pitStopIndex].empty() &&
-					aboutToReachFromRight[pitStopIndex].front().reachedCurrAt==simulationTime)
+				for(int pitStopIndex=0;pitStopIndex<totalPitstops;pitStopIndex++)
 				{
-					//cerr<<aboutToReachFromRight[pitStopIndex].front().tid<<" truck has reached pitStop "<<
-					//pitStopIndex<<" and is waiting to go left"<<endl;
-					waitingToGoLeft[pitStopIndex].push_back(aboutToReachFromRight[pitStopIndex].front());
-					if(aboutToReachFromRight[pitStopIndex].front().driverCreate)
-					{	
-						//cerr<<"A drive from right has reached pitStop "<<pitStopIndex<<"from above truck id"<<endl;					
-						struct driverNode driverCreated;
-						driverCreated.reachedAt=simulationTime;
-						driverCreated.reachedTripId=aboutToReachFromRight[pitStopIndex].front().tid;
-						driverFromRight[pitStopIndex].push_back(driverCreated);
-					}
-					aboutToReachFromRight[pitStopIndex].pop_front();
-				}
-				
-				//truck travelling from left has reached
-				while( !aboutToReachFromLeft[pitStopIndex].empty() &&
-					aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt==simulationTime)
-				{
-					//cerr<<aboutToReachFromLeft[pitStopIndex].front().tid<<" truck has reached pitStop "<<
-					//pitstopSequenceVector[pitStopIndex]<<" and is waiting to go right"<<endl;
-					waitingToGoRight[pitStopIndex].push_back(aboutToReachFromLeft[pitStopIndex].front());
-					if(aboutToReachFromLeft[pitStopIndex].front().driverCreate)
-					{					
-						//cerr<<"A drive from the left has reached pitStop "<<pitstopSequenceVector[pitStopIndex]<<"from above truck id"<<endl;
-						struct driverNode driverCreated;
-						driverCreated.reachedAt=simulationTime;
-						driverCreated.reachedTripId=aboutToReachFromLeft[pitStopIndex].front().tid;
-						driverFromLeft[pitStopIndex].push_back(driverCreated);
-					}
-					aboutToReachFromLeft[pitStopIndex].pop_front();
-				}
-				
-				
-
-				//match already waiting driversfromright with trips to go right
-				while(!driverFromRight[pitStopIndex].empty() && !waitingToGoRight[pitStopIndex].empty())
-				{
-					struct truckNode truckToGoRightCopy=waitingToGoRight[pitStopIndex].front();
-					waitingToGoRight[pitStopIndex].pop_front();
-
-					// cerr<<"there are drivers from right present "<<pitstopSequenceVector[pitStopIndex]<<
-					// "here and there are also trucks waiting to go right, So Match has occured between truck id"<<truckToGoRightCopy.tid<< "which needs to go right"
-					// <<"and "<<driverFromRight[pitStopIndex].front().reachedTripId<<" which came from right";
-					//update tripsToOutput
-					truckToGoRightCopy.driverCreate=false;
-					string outStr=to_string(truckToGoRightCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
-					+" "+to_string(simulationTime);
-					tripsToOutput.push_back(outStr);
-					//update matchingToOutput
-					string outStr1=pitstopSequenceVector[pitStopIndex+1]+" "+
-						pitstopSequenceVector[pitStopIndex]+" "+
-						to_string(driverFromRight[pitStopIndex].front().reachedTripId)+" "+
-						to_string(truckToGoRightCopy.tid)+" "+
-						pitstopSequenceVector[pitStopIndex];
-					matchingToOutput.push_back(outStr1);
-					costScore+=costVal(simulationTime-driverFromRight[pitStopIndex].front().reachedAt);
-					driverFromRight[pitStopIndex].pop_front();
-					//update arrival at next stop
-					// if((pitStopIndex)!=(totalPitstops-1))
-					// {
-						truckToGoRightCopy.currPt=pitstopSequenceVector[pitStopIndex+1];
-						truckToGoRightCopy.reachedCurrAt=simulationTime+travelTime[tripStr(
-							pitstopSequenceVector[pitStopIndex],pitstopSequenceVector[pitStopIndex+1]
-							)];
-						// cerr<<truckToGoRightCopy.tid<<"is leaving towards right for pitstop"
-						// <<pitstopSequenceVector[pitStopIndex+1];
-						aboutToReachFromLeft[pitStopIndex+1].push_back(truckToGoRightCopy);
-					//}
-				}
-
-				//let go of trucks which have no waiting time left or drivers are not there
-				vector<int> toRemove;
-				
-				for(int tj=0;tj<waitingToGoRight[pitStopIndex].size();tj++)
-				{
-					if(pitStopIndex==(pitStopIndex-1))
+					
+					//truck travelling from right has reached
+					while(!aboutToReachFromRight[pitStopIndex].empty() &&
+						aboutToReachFromRight[pitStopIndex].front().reachedCurrAt==simulationTime)
 					{
-						toRemove.push_back(tj);
-						continue;
+						//cerr<<aboutToReachFromRight[pitStopIndex].front().tid<<" truck has reached pitStop "<<
+						//pitStopIndex<<" and is waiting to go left"<<endl;
+						waitingToGoLeft[pitStopIndex].push_back(aboutToReachFromRight[pitStopIndex].front());
+						if(aboutToReachFromRight[pitStopIndex].front().driverCreate)
+						{	
+							//cerr<<"A drive from right has reached pitStop "<<pitStopIndex<<"from above truck id"<<endl;					
+							struct driverNode driverCreated;
+							driverCreated.reachedAt=simulationTime;
+							driverCreated.reachedTripId=aboutToReachFromRight[pitStopIndex].front().tid;
+							driverFromRight[pitStopIndex].push_back(driverCreated);
+						}
+						aboutToReachFromRight[pitStopIndex].pop_front();
 					}
-					struct truckNode truckToGoRight=waitingToGoRight[pitStopIndex][tj];
-					struct truckNode truckToGoRightCopy=truckToGoRight;
-
-					double currentRandomNumber = unif(rng);
-					if(truckToGoRightCopy.waitTimeLeft==0 || 
-						(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<=(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
-						currentRandomNumber<0.2
-						)
+					
+					//truck travelling from left has reached
+					while( !aboutToReachFromLeft[pitStopIndex].empty() &&
+						aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt==simulationTime)
 					{
+						//cerr<<aboutToReachFromLeft[pitStopIndex].front().tid<<" truck has reached pitStop "<<
+						//pitstopSequenceVector[pitStopIndex]<<" and is waiting to go right"<<endl;
+						waitingToGoRight[pitStopIndex].push_back(aboutToReachFromLeft[pitStopIndex].front());
+						if(aboutToReachFromLeft[pitStopIndex].front().driverCreate)
+						{					
+							//cerr<<"A drive from the left has reached pitStop "<<pitstopSequenceVector[pitStopIndex]<<"from above truck id"<<endl;
+							struct driverNode driverCreated;
+							driverCreated.reachedAt=simulationTime;
+							driverCreated.reachedTripId=aboutToReachFromLeft[pitStopIndex].front().tid;
+							driverFromLeft[pitStopIndex].push_back(driverCreated);
+						}
+						aboutToReachFromLeft[pitStopIndex].pop_front();
+					}
+					
+					
+
+					//match already waiting driversfromright with trips to go right
+					while(!driverFromRight[pitStopIndex].empty() && !waitingToGoRight[pitStopIndex].empty())
+					{
+						struct truckNode truckToGoRightCopy=waitingToGoRight[pitStopIndex].front();
+						waitingToGoRight[pitStopIndex].pop_front();
+
+						// cerr<<"there are drivers from right present "<<pitstopSequenceVector[pitStopIndex]<<
+						// "here and there are also trucks waiting to go right, So Match has occured between truck id"<<truckToGoRightCopy.tid<< "which needs to go right"
+						// <<"and "<<driverFromRight[pitStopIndex].front().reachedTripId<<" which came from right";
 						//update tripsToOutput
+						truckToGoRightCopy.driverCreate=false;
 						string outStr=to_string(truckToGoRightCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
 						+" "+to_string(simulationTime);
 						tripsToOutput.push_back(outStr);
-						//driver is created
-						truckToGoRightCopy.driverCreate=true;
+						//update matchingToOutput
+						string outStr1=pitstopSequenceVector[pitStopIndex+1]+" "+
+							pitstopSequenceVector[pitStopIndex]+" "+
+							to_string(driverFromRight[pitStopIndex].front().reachedTripId)+" "+
+							to_string(truckToGoRightCopy.tid)+" "+
+							pitstopSequenceVector[pitStopIndex];
+						matchingToOutput.push_back(outStr1);
+						costScore+=costVal(simulationTime-driverFromRight[pitStopIndex].front().reachedAt);
+						driverFromRight[pitStopIndex].pop_front();
 						//update arrival at next stop
-						if((pitStopIndex)!=(totalPitstops-1))
-						{
+						// if((pitStopIndex)!=(totalPitstops-1))
+						// {
 							truckToGoRightCopy.currPt=pitstopSequenceVector[pitStopIndex+1];
 							truckToGoRightCopy.reachedCurrAt=simulationTime+travelTime[tripStr(
 								pitstopSequenceVector[pitStopIndex],pitstopSequenceVector[pitStopIndex+1]
 								)];
-						// cerr<<truckToGoRightCopy.tid<<"has left towards right for pitstop"
-						// <<pitstopSequenceVector[pitStopIndex+1];
+							// cerr<<truckToGoRightCopy.tid<<"is leaving towards right for pitstop"
+							// <<pitstopSequenceVector[pitStopIndex+1];
 							aboutToReachFromLeft[pitStopIndex+1].push_back(truckToGoRightCopy);
-						}
-						toRemove.push_back(tj);
+						//}
 					}
-				}
-				//remove from waitingToGoRight[pitStopIndex]
-				for(int tj=0;tj<toRemove.size();tj++)
-				{
-					waitingToGoRight[pitStopIndex].erase( waitingToGoRight[pitStopIndex].begin()+toRemove[tj]);
-				}
 
-				////////////////////doing the same thing in opposite sense
-
-				//match already waiting driversfromleft with trips to go left
-				while(!driverFromLeft[pitStopIndex].empty() && !waitingToGoLeft[pitStopIndex].empty())
-				{
-					//update tripsToOutput
-					struct truckNode truckToGoLeftCopy=waitingToGoLeft[pitStopIndex].front();
-					waitingToGoLeft[pitStopIndex].pop_front();
-					truckToGoLeftCopy.driverCreate=false;
-					string outStr=to_string(truckToGoLeftCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
-					+" "+to_string(simulationTime);
-					tripsToOutput.push_back(outStr);
-					//update matchingToOutput
-					string outStr1=pitstopSequenceVector[pitStopIndex-1]+" "+
-						pitstopSequenceVector[pitStopIndex]+" "+
-						to_string(driverFromLeft[pitStopIndex].front().reachedTripId)+" "+
-						to_string(truckToGoLeftCopy.tid)+" "+
-						pitstopSequenceVector[pitStopIndex];
-					matchingToOutput.push_back(outStr1);
-					costScore+=costVal(simulationTime-driverFromLeft[pitStopIndex].front().reachedAt);
-					driverFromLeft[pitStopIndex].pop_front();
-					//update arrival at next stop
-					// if((pitStopIndex)!=(0))
-					// {
-						truckToGoLeftCopy.currPt=pitstopSequenceVector[pitStopIndex-1];
-						truckToGoLeftCopy.reachedCurrAt=simulationTime+travelTime[tripStr(
-							pitstopSequenceVector[pitStopIndex],pitstopSequenceVector[pitStopIndex-1]
-							)];
-						aboutToReachFromRight[pitStopIndex-1].push_back(truckToGoLeftCopy);
-					// }
-				}
-
-
-				//let go of trucks which have no waiting time left or drivers are not there
-				vector<int> toRemove1;
-				for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
-				{
-					if(pitStopIndex==(0))
+					//let go of trucks which have no waiting time left or drivers are not there
+					vector<int> toRemove;
+					
+					for(int tj=0;tj<waitingToGoRight[pitStopIndex].size();tj++)
 					{
-						toRemove1.push_back(tj);
-						continue;
+						if(pitStopIndex==(pitStopIndex-1))
+						{
+							toRemove.push_back(tj);
+							continue;
+						}
+						struct truckNode truckToGoRight=waitingToGoRight[pitStopIndex][tj];
+						struct truckNode truckToGoRightCopy=truckToGoRight;
+
+						double currentRandomNumber = unif(rng);
+						if(truckToGoRightCopy.waitTimeLeft==0 || 
+							(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<=(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
+							currentRandomNumber<0.2
+							)
+						{
+							//update tripsToOutput
+							string outStr=to_string(truckToGoRightCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
+							+" "+to_string(simulationTime);
+							tripsToOutput.push_back(outStr);
+							//driver is created
+							truckToGoRightCopy.driverCreate=true;
+							//update arrival at next stop
+							if((pitStopIndex)!=(totalPitstops-1))
+							{
+								truckToGoRightCopy.currPt=pitstopSequenceVector[pitStopIndex+1];
+								truckToGoRightCopy.reachedCurrAt=simulationTime+travelTime[tripStr(
+									pitstopSequenceVector[pitStopIndex],pitstopSequenceVector[pitStopIndex+1]
+									)];
+							// cerr<<truckToGoRightCopy.tid<<"has left towards right for pitstop"
+							// <<pitstopSequenceVector[pitStopIndex+1];
+								aboutToReachFromLeft[pitStopIndex+1].push_back(truckToGoRightCopy);
+							}
+							toRemove.push_back(tj);
+						}
 					}
-					struct truckNode truckToGoLeft=waitingToGoLeft[pitStopIndex][tj];
-					struct truckNode truckToGoLeftCopy=truckToGoLeft;
+					//remove from waitingToGoRight[pitStopIndex]
+					for(int tj=0;tj<toRemove.size();tj++)
+					{
+						waitingToGoRight[pitStopIndex].erase( waitingToGoRight[pitStopIndex].begin()+toRemove[tj]);
+					}
 
-					double currentRandomNumber = unif(rng);
+					////////////////////doing the same thing in opposite sense
 
-					if(truckToGoLeftCopy.waitTimeLeft==0 || 
-						((!aboutToReachFromRight[pitStopIndex].empty()) &&
-						 (truckToGoLeftCopy.waitTimeLeft<=
-						 	(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
-						currentRandomNumber<0.2
-						)
+					//match already waiting driversfromleft with trips to go left
+					while(!driverFromLeft[pitStopIndex].empty() && !waitingToGoLeft[pitStopIndex].empty())
 					{
 						//update tripsToOutput
+						struct truckNode truckToGoLeftCopy=waitingToGoLeft[pitStopIndex].front();
+						waitingToGoLeft[pitStopIndex].pop_front();
+						truckToGoLeftCopy.driverCreate=false;
 						string outStr=to_string(truckToGoLeftCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
 						+" "+to_string(simulationTime);
 						tripsToOutput.push_back(outStr);
-						//driver is created
-						truckToGoLeftCopy.driverCreate=true;
+						//update matchingToOutput
+						string outStr1=pitstopSequenceVector[pitStopIndex-1]+" "+
+							pitstopSequenceVector[pitStopIndex]+" "+
+							to_string(driverFromLeft[pitStopIndex].front().reachedTripId)+" "+
+							to_string(truckToGoLeftCopy.tid)+" "+
+							pitstopSequenceVector[pitStopIndex];
+						matchingToOutput.push_back(outStr1);
+						costScore+=costVal(simulationTime-driverFromLeft[pitStopIndex].front().reachedAt);
+						driverFromLeft[pitStopIndex].pop_front();
 						//update arrival at next stop
-						if((pitStopIndex)!=(0))
-						{
+						// if((pitStopIndex)!=(0))
+						// {
 							truckToGoLeftCopy.currPt=pitstopSequenceVector[pitStopIndex-1];
 							truckToGoLeftCopy.reachedCurrAt=simulationTime+travelTime[tripStr(
 								pitstopSequenceVector[pitStopIndex],pitstopSequenceVector[pitStopIndex-1]
 								)];
-						// cerr<<truckToGoLeftCopy.tid<<"has left towards left for pitstop"
-						// <<pitstopSequenceVector[pitStopIndex-1];
 							aboutToReachFromRight[pitStopIndex-1].push_back(truckToGoLeftCopy);
-						}
-						toRemove1.push_back(tj);
+						// }
 					}
-				}
-				//remove from waitingToGoRight[pitStopIndex]
-				for(int tj=0;tj<toRemove1.size();tj++)	
-				{
-					waitingToGoLeft[pitStopIndex].erase(waitingToGoLeft[pitStopIndex].begin()+toRemove1[tj]);
-				}
 
-				
 
-				for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
-				{
-					waitingToGoLeft[pitStopIndex][tj].waitTimeLeft-=1;	
-				}
+					//let go of trucks which have no waiting time left or drivers are not there
+					vector<int> toRemove1;
+					for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
+					{
+						if(pitStopIndex==(0))
+						{
+							toRemove1.push_back(tj);
+							continue;
+						}
+						struct truckNode truckToGoLeft=waitingToGoLeft[pitStopIndex][tj];
+						struct truckNode truckToGoLeftCopy=truckToGoLeft;
 
-				for(int tj=0;tj<waitingToGoRight[pitStopIndex].size();tj++)	
-				{
-					waitingToGoRight[pitStopIndex][tj].waitTimeLeft-=1;	
+						double currentRandomNumber = unif(rng);
+
+						if(truckToGoLeftCopy.waitTimeLeft==0 || 
+							((!aboutToReachFromRight[pitStopIndex].empty()) &&
+							 (truckToGoLeftCopy.waitTimeLeft<=
+							 	(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
+							currentRandomNumber<0.2
+							)
+						{
+							//update tripsToOutput
+							string outStr=to_string(truckToGoLeftCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
+							+" "+to_string(simulationTime);
+							tripsToOutput.push_back(outStr);
+							//driver is created
+							truckToGoLeftCopy.driverCreate=true;
+							//update arrival at next stop
+							if((pitStopIndex)!=(0))
+							{
+								truckToGoLeftCopy.currPt=pitstopSequenceVector[pitStopIndex-1];
+								truckToGoLeftCopy.reachedCurrAt=simulationTime+travelTime[tripStr(
+									pitstopSequenceVector[pitStopIndex],pitstopSequenceVector[pitStopIndex-1]
+									)];
+							// cerr<<truckToGoLeftCopy.tid<<"has left towards left for pitstop"
+							// <<pitstopSequenceVector[pitStopIndex-1];
+								aboutToReachFromRight[pitStopIndex-1].push_back(truckToGoLeftCopy);
+							}
+							toRemove1.push_back(tj);
+						}
+					}
+					//remove from waitingToGoRight[pitStopIndex]
+					for(int tj=0;tj<toRemove1.size();tj++)	
+					{
+						waitingToGoLeft[pitStopIndex].erase(waitingToGoLeft[pitStopIndex].begin()+toRemove1[tj]);
+					}
+
+					
+
+					for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
+					{
+						waitingToGoLeft[pitStopIndex][tj].waitTimeLeft-=1;	
+					}
+
+					for(int tj=0;tj<waitingToGoRight[pitStopIndex].size();tj++)	
+					{
+						waitingToGoRight[pitStopIndex][tj].waitTimeLeft-=1;	
+					}
+					//updateWaitingTimeLeft
 				}
-				//updateWaitingTimeLeft
+			}
+			
+			//Adding Cost of the unmatched trucks
+			for(int pitStopIndex=0;pitStopIndex<totalPitstops;pitStopIndex++)
+			{
+				// update
+				// int reachedAt;
+				// int reachedTripId;
+				// matchingToOutput
+				for(int zez=0;zez< driverFromLeft[pitStopIndex].size();zez++)
+				{
+					string outStr=pitstopSequenceVector[pitStopIndex-1]+" "+
+					pitstopSequenceVector[pitStopIndex]+" "+
+					to_string(driverFromLeft[pitStopIndex][zez].reachedTripId)+" -1 -1";
+					matchingToOutput.push_back(outStr);
+					costScore+=costVal(ow - driverFromLeft[pitStopIndex][zez].reachedAt);
+				}
+				for(int zez=0;zez<driverFromRight[pitStopIndex].size();zez++)
+				{
+					string outStr=pitstopSequenceVector[pitStopIndex+1]+" "+
+					pitstopSequenceVector[pitStopIndex]+" "+
+					to_string(driverFromRight[pitStopIndex][zez].reachedTripId)+" -1 -1";
+					matchingToOutput.push_back(outStr);
+					costScore+=costVal(ow - driverFromRight[pitStopIndex][zez].reachedAt);
+				}
+			}
+
+			if(costScore<costScore_final)
+			{
+				costScore_final=costScore;
+				tripsToOutput_final=tripsToOutput;
+				matchingToOutput_final=matchingToOutput;
 			}
 
 		}
-		//DEBUG2(costScore);
-		//Adding Cost of the unmatched trucks
-		for(int pitStopIndex=0;pitStopIndex<totalPitstops;pitStopIndex++)
-		{
-			// update
-			// int reachedAt;
-			// int reachedTripId;
-			// matchingToOutput
-			for(int zez=0;zez< driverFromLeft[pitStopIndex].size();zez++)
-			{
-				string outStr=pitstopSequenceVector[pitStopIndex-1]+" "+
-				pitstopSequenceVector[pitStopIndex]+" "+
-				to_string(driverFromLeft[pitStopIndex][zez].reachedTripId)+" -1 -1";
-				matchingToOutput.push_back(outStr);
-				costScore+=costVal(ow - driverFromLeft[pitStopIndex][zez].reachedAt);
-			}
-			for(int zez=0;zez<driverFromRight[pitStopIndex].size();zez++)
-			{
-				string outStr=pitstopSequenceVector[pitStopIndex+1]+" "+
-				pitstopSequenceVector[pitStopIndex]+" "+
-				to_string(driverFromRight[pitStopIndex][zez].reachedTripId)+" -1 -1";
-				matchingToOutput.push_back(outStr);
-				costScore+=costVal(ow - driverFromRight[pitStopIndex][zez].reachedAt);
-			}
-		}
+		
 
 
 		// DEBUG2(costScore);
 		// DEBUG2("Below are the trips");
-		cout<<testcaseName<<" "<<(tripsToOutput.size()+matchingToOutput.size()+2)<<endl;
-		cout<<int(tripsToOutput.size())<<" "<<int(matchingToOutput.size())<<endl;
-		for(int i=0;i<tripsToOutput.size();i++)
+		cout<<testcaseName<<" "<<(tripsToOutput_final.size()+matchingToOutput_final.size()+2)<<endl;
+		cout<<int(tripsToOutput_final.size())<<" "<<int(matchingToOutput_final.size())<<endl;
+		for(int i=0;i<tripsToOutput_final.size();i++)
 		{
-			cout<<tripsToOutput[i]<<endl;
+			cout<<tripsToOutput_final[i]<<endl;
 		}
 		//DEBUG2("Below are the matchings");
-		for(int i=0;i<matchingToOutput.size();i++)
+		for(int i=0;i<matchingToOutput_final.size();i++)
 		{
-			cout<<matchingToOutput[i]<<endl;
+			cout<<matchingToOutput_final[i]<<endl;
 		}
-		cout<<costScore<<endl;
-
-
+		cout<<costScore_final<<endl;
 
 	}
 
