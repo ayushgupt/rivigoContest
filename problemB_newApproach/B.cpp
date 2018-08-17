@@ -116,6 +116,7 @@ int main()
 		}
 		int t,s,ow,r;
 		cin>>t>>s>>ow>>r;
+		auto startAlarmClock = chrono::steady_clock::now();
 		vector<truckNode> scheduleVec;
 
 		//reading up the timings
@@ -146,7 +147,7 @@ int main()
 				currSch.aheadMoving=true;
 				aheadMovingMap[to_string(currSch.tid)]=true;
 			}
-			//DEBUG2(currSch.aheadMoving);
+			
 			int startIndexPt=indexPt[currSch.currPt];
 			int destIndexPt=indexPt[destination];
 			int waitTimeSchedule=0;
@@ -166,8 +167,6 @@ int main()
 				}
 			}
 			waitTimeSchedule=(arriveBy- currSch.startingTime)-timeTravelSchedule;
-			// DEBUG2(currSch.tid);
-			// DEBUG2(waitTimeSchedule);
 			currSch.waitTimeAlloted=waitTimeSchedule;
 			currSch.waitTimeLeft=waitTimeSchedule;
 			scheduleVec.push_back(currSch);
@@ -178,8 +177,18 @@ int main()
 		vector<string> tripsToOutput_final;
 		vector<string> matchingToOutput_final;
 
-		for(int scheduleIteration=0;scheduleIteration<10000;scheduleIteration++)
+
+		long int maxOneIteration = 0;			
+		long int timeAlarm=0;
+		srand (time(NULL));
+
+
+		for(int scheduleIteration=0;scheduleIteration<2||timeAlarm<(r*1000-3*maxOneIteration);scheduleIteration++)
 		{
+			auto startCurrSchedule= chrono::steady_clock::now();
+
+
+
 			double prob1,prob2;
 			if(scheduleIteration%5==0)
 			{			
@@ -235,7 +244,7 @@ int main()
 			//doing a simulation
 			for(int simulationTime=0;simulationTime<=ow;simulationTime++)
 			{
-				//DEBUG2(simulationTime);
+				
 				//Add initial truck trips about to start near simulation time
 				for(int i=0;i<s;i++)
 				{
@@ -245,14 +254,10 @@ int main()
 					{
 						if(simulationTime==0 && indexToAddTruck==0)
 						{
-							//DEBUG2("Added truck aboutToReachFromLeft");
-							//DEBUG2(currTruckToAddInSystem.tid);
 							aboutToReachFromLeft[0].push_back(currTruckToAddInSystem);
 						}
 						else if(simulationTime==0 && indexToAddTruck==(totalPitstops-1))
 						{
-							//DEBUG2("Added truck aboutToReachFromRight");
-							//DEBUG2(currTruckToAddInSystem.tid);
 							aboutToReachFromRight[(totalPitstops-1)].push_back(currTruckToAddInSystem);
 						}
 					}
@@ -263,12 +268,8 @@ int main()
 							int idealAdditionTime=currTruckToAddInSystem.reachedCurrAt- 
 									travelTime[tripStr(pitstopSequenceVector[indexToAddTruck-1],
 										pitstopSequenceVector[indexToAddTruck])];
-							//DEBUG2(currTruckToAddInSystem.aheadMoving);
 							if(simulationTime==max(idealAdditionTime,0))
 							{
-								//DEBUG2("Added truck aboutToReachFromLeft");
-								//DEBUG2(currTruckToAddInSystem.tid);
-								//DEBUG2(indexToAddTruck);
 								aboutToReachFromLeft[indexToAddTruck].push_back(currTruckToAddInSystem);
 							}
 						}
@@ -277,12 +278,8 @@ int main()
 							int idealAdditionTime=currTruckToAddInSystem.reachedCurrAt- 
 									travelTime[tripStr(pitstopSequenceVector[indexToAddTruck+1],
 										pitstopSequenceVector[indexToAddTruck])];
-							//DEBUG2(currTruckToAddInSystem.aheadMoving);
 							if(simulationTime==max(idealAdditionTime,0))
 							{
-								//DEBUG2("Added truck aboutToReachFromRight");
-								//DEBUG2(indexToAddTruck);
-								//DEBUG2(currTruckToAddInSystem.tid);
 								aboutToReachFromRight[indexToAddTruck].push_back(currTruckToAddInSystem);
 							}
 						}
@@ -382,8 +379,7 @@ int main()
 						}
 						struct truckNode truckToGoRight=waitingToGoRight[pitStopIndex][tj];
 						struct truckNode truckToGoRightCopy=truckToGoRight;
-						//DEBUG2(truckToGoRightCopy.tid);
-
+						
 						double currentRandomNumber = unif(rng);
 						if(truckToGoRightCopy.waitTimeLeft==0 || 
 							(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<=(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
@@ -541,7 +537,6 @@ int main()
 				}
 				for(int maq=0;maq<totalPitstops;maq++)
 				{
-					//DEBUG2(maq);
 					for(int tak=0;tak<aboutToReachFromRight[maq].size();tak++)
 					{
 						struct truckNode unmatchTruck=aboutToReachFromRight[maq][tak];
@@ -550,7 +545,6 @@ int main()
 							string outStr=pitstopSequenceVector[maq+1]+" "+
 							pitstopSequenceVector[maq]+" "+
 							to_string(unmatchTruck.tid)+" -1 -1";
-							//DEBUG2(outStr);
 							matchingToOutput.push_back(outStr);
 						}
 					}
@@ -562,7 +556,6 @@ int main()
 							string outStr=pitstopSequenceVector[maq-1]+" "+
 							pitstopSequenceVector[maq]+" "+
 							to_string(unmatchTruck.tid)+" -1 -1";
-							//DEBUG2(outStr);
 							matchingToOutput.push_back(outStr);
 						}
 					}
@@ -572,16 +565,24 @@ int main()
 
 			if(costScore<costScore_final)
 			{
-				// DEBUG2("########");
-				// DEBUG2(scheduleIteration);
-				// DEBUG2(costScore);
+				DEBUG2("########################################");
+				DEBUG2(scheduleIteration);
+				DEBUG2(costScore);
 				costScore_final=costScore;
 				tripsToOutput_final=tripsToOutput;
 				matchingToOutput_final=matchingToOutput;	
 			}
 
+			auto endCurrSchedule= chrono::steady_clock::now();
+			auto currIterationTime = chrono::duration_cast<chrono::milliseconds>(endCurrSchedule - startCurrSchedule).count();
+			maxOneIteration=max(maxOneIteration,currIterationTime);
+			auto currAlarmClock = chrono::steady_clock::now();
+			timeAlarm = chrono::duration_cast<chrono::milliseconds>(currAlarmClock - startAlarmClock).count();
+
+
+
 		}
-		
+		DEBUG2("################################################################################");
 
 
 		set<string> myset( matchingToOutput_final.begin(), matchingToOutput_final.end() );
