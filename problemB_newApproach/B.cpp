@@ -178,7 +178,7 @@ int main()
 		vector<string> tripsToOutput_final;
 		vector<string> matchingToOutput_final;
 
-		for(int scheduleIteration=0;scheduleIteration<100;scheduleIteration++)
+		for(int scheduleIteration=0;scheduleIteration<10000;scheduleIteration++)
 		{
 			//Start iterations here
 			int costScore=0;
@@ -544,9 +544,12 @@ int main()
 
 			if(costScore<costScore_final)
 			{
-						costScore_final=costScore;
-						tripsToOutput_final=tripsToOutput;
-						matchingToOutput_final=matchingToOutput;	
+				//DEBUG2("########");
+				//DEBUG2(costScore);
+				//DEBUG2(scheduleIteration);
+				costScore_final=costScore;
+				tripsToOutput_final=tripsToOutput;
+				matchingToOutput_final=matchingToOutput;	
 			}
 
 		}
