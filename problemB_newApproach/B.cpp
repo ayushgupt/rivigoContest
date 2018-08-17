@@ -180,6 +180,34 @@ int main()
 
 		for(int scheduleIteration=0;scheduleIteration<10000;scheduleIteration++)
 		{
+			double prob1,prob2;
+			if(scheduleIteration%5==0)
+			{			
+				prob1=unif(rng)/20;
+				prob2=unif(rng)/10+0.2;
+			}
+			else if(scheduleIteration%5==1)
+			{
+				prob1=unif(rng)/10+0.2;
+				prob2=unif(rng)/20;
+			}
+			else if(scheduleIteration%5==2)
+			{
+				prob1=0.1;
+				prob2=0.1;
+			}
+			else if(scheduleIteration%5==3)
+			{
+				prob1=0.05;
+				prob2=0.05;
+			}
+			else
+			{
+				prob1=0.2;
+				prob2=0.2;
+			}
+
+
 			//Start iterations here
 			int costScore=0;
 			vector<string> tripsToOutput;
@@ -359,7 +387,7 @@ int main()
 						double currentRandomNumber = unif(rng);
 						if(truckToGoRightCopy.waitTimeLeft==0 || 
 							(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<=(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
-							currentRandomNumber<0.2
+							currentRandomNumber<prob1
 							)
 						{
 							//update tripsToOutput
@@ -445,7 +473,7 @@ int main()
 							((!aboutToReachFromRight[pitStopIndex].empty()) &&
 							 (truckToGoLeftCopy.waitTimeLeft<=
 							 	(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
-							currentRandomNumber<0.2
+							currentRandomNumber<prob2
 							)
 						{
 							//update tripsToOutput
@@ -544,9 +572,9 @@ int main()
 
 			if(costScore<costScore_final)
 			{
-				//DEBUG2("########");
-				//DEBUG2(costScore);
-				//DEBUG2(scheduleIteration);
+				// DEBUG2("########");
+				// DEBUG2(scheduleIteration);
+				// DEBUG2(costScore);
 				costScore_final=costScore;
 				tripsToOutput_final=tripsToOutput;
 				matchingToOutput_final=matchingToOutput;	
