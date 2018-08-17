@@ -327,6 +327,15 @@ int main()
 					}
 					
 
+
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					///////////////////////Truck reaching Done //////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+
 					//match already waiting driversfromright with trips to go right
 					while(!driverFromRight[pitStopIndex].empty() && !waitingToGoRight[pitStopIndex].empty())
 					{
@@ -382,7 +391,7 @@ int main()
 						
 						double currentRandomNumber = unif(rng);
 						if(truckToGoRightCopy.waitTimeLeft==0 || 
-							(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<=(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
+							(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
 							currentRandomNumber<prob1
 							)
 						{
@@ -414,7 +423,13 @@ int main()
 						waitingToGoRight[pitStopIndex].erase( waitingToGoRight[pitStopIndex].begin()+toRemove[tj]);
 					}
 
-					////////////////////doing the same thing in opposite sense
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					///////////////////////Opposite Side Doing Same /////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
 
 					//match already waiting driversfromleft with trips to go left
 					while(!driverFromLeft[pitStopIndex].empty() && !waitingToGoLeft[pitStopIndex].empty())
@@ -467,7 +482,7 @@ int main()
 
 						if(truckToGoLeftCopy.waitTimeLeft==0 || 
 							((!aboutToReachFromRight[pitStopIndex].empty()) &&
-							 (truckToGoLeftCopy.waitTimeLeft<=
+							 (truckToGoLeftCopy.waitTimeLeft<
 							 	(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
 							currentRandomNumber<prob2
 							)
@@ -500,6 +515,14 @@ int main()
 						waitingToGoLeft[pitStopIndex].erase(waitingToGoLeft[pitStopIndex].begin()+toRemove1[tj]);
 					}
 
+
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					///////////////////////Updating Wait time of Waiting Trucks//////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
+					/////////////////////////////////////////////////////////////////////////////
 					
 
 					for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
@@ -565,9 +588,9 @@ int main()
 
 			if(costScore<costScore_final)
 			{
-				DEBUG2("########################################");
-				DEBUG2(scheduleIteration);
-				DEBUG2(costScore);
+				//DEBUG2("########################################");
+				//DEBUG2(scheduleIteration);
+				//DEBUG2(costScore);
 				costScore_final=costScore;
 				tripsToOutput_final=tripsToOutput;
 				matchingToOutput_final=matchingToOutput;	
@@ -582,7 +605,7 @@ int main()
 
 
 		}
-		DEBUG2("################################################################################");
+		//DEBUG2("################################################################################");
 
 
 		set<string> myset( matchingToOutput_final.begin(), matchingToOutput_final.end() );
