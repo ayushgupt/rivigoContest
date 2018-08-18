@@ -190,30 +190,35 @@ int main()
 
 
 			double prob1,prob2;
-			if(scheduleIteration%5==0)
+			if(scheduleIteration%6==0)
 			{			
 				prob1=unif(rng)/20;
 				prob2=unif(rng)/10+0.2;
 			}
-			else if(scheduleIteration%5==1)
+			else if(scheduleIteration%6==1)
 			{
 				prob1=unif(rng)/10+0.2;
 				prob2=unif(rng)/20;
 			}
-			else if(scheduleIteration%5==2)
+			else if(scheduleIteration%6==2)
 			{
 				prob1=0.1;
 				prob2=0.1;
 			}
-			else if(scheduleIteration%5==3)
+			else if(scheduleIteration%6==3)
 			{
 				prob1=0.05;
 				prob2=0.05;
 			}
-			else
+			else if(scheduleIteration%6==4)
 			{
 				prob1=0.2;
 				prob2=0.2;
+			}
+			else
+			{
+				prob1=0.5;
+				prob2=0.5;
 			}
 
 
@@ -376,6 +381,16 @@ int main()
 						//}
 					}
 
+					vector<int> indexTruckWithDriver1;
+					for(int kt=0;kt<aboutToReachFromRight[pitStopIndex].size();kt++)
+					{
+						if(aboutToReachFromRight[pitStopIndex][kt].driverCreate)
+						{
+							indexTruckWithDriver1.push_back(kt);
+						}
+					}
+
+					int futureMatchIndex1=0;
 					//let go of trucks which have no waiting time left or drivers are not there
 					vector<int> toRemove;
 					
@@ -388,12 +403,22 @@ int main()
 						}
 						struct truckNode truckToGoRight=waitingToGoRight[pitStopIndex][tj];
 						struct truckNode truckToGoRightCopy=truckToGoRight;
+
+
+						//make stay
+						if(futureMatchIndex1<int(indexTruckWithDriver1.size()) && truckToGoRightCopy.waitTimeLeft>=(aboutToReachFromRight[pitStopIndex][futureMatchIndex1].reachedCurrAt-simulationTime))
+						{
+							//please don't let it go!
+							futureMatchIndex1+=1;
+							double currentRandomNumber1 = unif(rng);
+							if(currentRandomNumber1<0.9)
+							{
+								continue;
+							}
+						}
 						
 						double currentRandomNumber = unif(rng);
-						if(truckToGoRightCopy.waitTimeLeft==0 || 
-							(!aboutToReachFromRight[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
-							currentRandomNumber<prob1
-							)
+						if(truckToGoRightCopy.waitTimeLeft==0 || currentRandomNumber<prob1)
 						{
 							//update tripsToOutput
 							string outStr=to_string(truckToGoRightCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
@@ -466,11 +491,14 @@ int main()
 					}
 
 
-					// vector<int> indexTruckWithDriver;
-					// for(int kt=0;kt<aboutToReachFromRight[pitStopIndex];kt++)
-					// {
-
-					// }
+					vector<int> indexTruckWithDriver;
+					for(int kt=0;kt<aboutToReachFromLeft[pitStopIndex].size();kt++)
+					{
+						if(aboutToReachFromLeft[pitStopIndex][kt].driverCreate)
+						{
+							indexTruckWithDriver.push_back(kt);
+						}
+					}
 
 					//Favour Leaving
 					//number of drivers(driverFromRight) waiting on (pitStopIndex-1)
@@ -480,7 +508,7 @@ int main()
 					//number of trucks coming from aboutToReachFromRight that are coming with createDriver as True
 
 
-
+					int futureMatchIndex=0;
 
 					//let go of trucks which have no waiting time left or drivers are not there
 					vector<int> toRemove1;
@@ -494,14 +522,21 @@ int main()
 						struct truckNode truckToGoLeft=waitingToGoLeft[pitStopIndex][tj];
 						struct truckNode truckToGoLeftCopy=truckToGoLeft;
 
+						//make stay
+						if(futureMatchIndex<int(indexTruckWithDriver.size()) && truckToGoLeftCopy.waitTimeLeft>=(aboutToReachFromLeft[pitStopIndex][futureMatchIndex].reachedCurrAt-simulationTime))
+						{
+							//please don't let it go!
+							futureMatchIndex+=1;
+							double currentRandomNumber1 = unif(rng);
+							if(currentRandomNumber1<0.9)
+							{
+								continue;
+							}
+						}
+
 						double currentRandomNumber = unif(rng);
 
-						if(truckToGoLeftCopy.waitTimeLeft==0 || 
-							((!aboutToReachFromLeft[pitStopIndex].empty()) &&
-							 (truckToGoLeftCopy.waitTimeLeft<
-							 	(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
-							currentRandomNumber<prob2
-							)
+						if(truckToGoLeftCopy.waitTimeLeft==0 ||	currentRandomNumber<prob2)
 						{
 							//update tripsToOutput
 							string outStr=to_string(truckToGoLeftCopy.tid)+" "+pitstopSequenceVector[pitStopIndex]
@@ -604,9 +639,9 @@ int main()
 
 			if(costScore<costScore_final)
 			{
-				//DEBUG2("########################################");
-				//DEBUG2(scheduleIteration);
-				//DEBUG2(costScore);
+				// DEBUG2("########################################");
+				// DEBUG2(scheduleIteration);
+				// DEBUG2(costScore);
 				costScore_final=costScore;
 				tripsToOutput_final=tripsToOutput;
 				matchingToOutput_final=matchingToOutput;	
@@ -621,7 +656,7 @@ int main()
 
 
 		}
-		//DEBUG2("################################################################################");
+		// DEBUG2("################################################################################");
 
 
 		set<string> myset( matchingToOutput_final.begin(), matchingToOutput_final.end() );

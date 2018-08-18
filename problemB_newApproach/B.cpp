@@ -411,7 +411,7 @@ int main()
 							//please don't let it go!
 							futureMatchIndex1+=1;
 							double currentRandomNumber1 = unif(rng);
-							if(currentRandomNumber1<0.97)
+							if(currentRandomNumber1<0.9)
 							{
 								continue;
 							}
@@ -528,7 +528,7 @@ int main()
 							//please don't let it go!
 							futureMatchIndex+=1;
 							double currentRandomNumber1 = unif(rng);
-							if(currentRandomNumber1<0.97)
+							if(currentRandomNumber1<0.9)
 							{
 								continue;
 							}
