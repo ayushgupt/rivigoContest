@@ -182,8 +182,8 @@ int main()
 		long int timeAlarm=0;
 		srand (time(NULL));
 
-
-		for(int scheduleIteration=0;scheduleIteration<2||timeAlarm<(r*1000-3*maxOneIteration);scheduleIteration++)
+		//||timeAlarm<(r*1000-3*maxOneIteration)
+		for(int scheduleIteration=0;scheduleIteration<10000;scheduleIteration++)
 		{
 			auto startCurrSchedule= chrono::steady_clock::now();
 
@@ -391,7 +391,7 @@ int main()
 						
 						double currentRandomNumber = unif(rng);
 						if(truckToGoRightCopy.waitTimeLeft==0 || 
-							(!aboutToReachFromLeft[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
+							(!aboutToReachFromRight[pitStopIndex].empty() && (truckToGoRightCopy.waitTimeLeft<(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
 							currentRandomNumber<prob1
 							)
 						{
@@ -466,9 +466,25 @@ int main()
 					}
 
 
+					// vector<int> indexTruckWithDriver;
+					// for(int kt=0;kt<aboutToReachFromRight[pitStopIndex];kt++)
+					// {
+
+					// }
+
+					//Favour Leaving
+					//number of drivers(driverFromRight) waiting on (pitStopIndex-1)
+
+
+					//Favour Waiting 
+					//number of trucks coming from aboutToReachFromRight that are coming with createDriver as True
+
+
+
+
 					//let go of trucks which have no waiting time left or drivers are not there
 					vector<int> toRemove1;
-					for(int tj=0;tj<waitingToGoLeft[pitStopIndex].size();tj++)	
+					for(int tj=0;tj<int(waitingToGoLeft[pitStopIndex].size());tj++)	
 					{
 						if(pitStopIndex<=(0))
 						{
@@ -481,9 +497,9 @@ int main()
 						double currentRandomNumber = unif(rng);
 
 						if(truckToGoLeftCopy.waitTimeLeft==0 || 
-							((!aboutToReachFromRight[pitStopIndex].empty()) &&
+							((!aboutToReachFromLeft[pitStopIndex].empty()) &&
 							 (truckToGoLeftCopy.waitTimeLeft<
-							 	(aboutToReachFromRight[pitStopIndex].front().reachedCurrAt-simulationTime)))||
+							 	(aboutToReachFromLeft[pitStopIndex].front().reachedCurrAt-simulationTime)))||
 							currentRandomNumber<prob2
 							)
 						{
